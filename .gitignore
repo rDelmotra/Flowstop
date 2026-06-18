@@ -44,6 +44,8 @@ Temporary Items
 # JetBrains / IntelliJ / PyCharm / WebStorm project settings
 .idea/
 .claude/
+.agents/
+*.md
 
 *.zip
 CHROMEWEBSTORE.md

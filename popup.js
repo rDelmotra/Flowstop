@@ -74,46 +74,73 @@ function renderManagedTabs(tabs) {
     return;
   }
 
+  // Clear the list container safely
   list.innerHTML = '';
+
   for (const tab of otherTabs) {
     const el = document.createElement('div');
     el.className = 'managed-tab';
 
     const domain = getDomain(tab.url);
-    const faviconHtml = tab.favIconUrl
-      ? `<img class="tab-favicon" src="${tab.favIconUrl}" alt="">`
-      : `<div class="tab-favicon placeholder">🌐</div>`;
 
-    el.innerHTML = `
-      ${faviconHtml}
-      <div class="tab-info">
-        <div class="tab-domain">${domain}</div>
-        <div class="tab-title">${tab.title || ''}</div>
-      </div>
-      <button class="restore-btn" title="Restore online" data-tab-id="${tab.id}">↩</button>
-    `;
+    // 1. Safely render the favicon
+    if (tab.favIconUrl) {
+      const img = document.createElement('img');
+      img.className = 'tab-favicon';
+      img.src = tab.favIconUrl;
+      img.alt = '';
+      el.appendChild(img);
+    } else {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'tab-favicon placeholder';
+      placeholder.textContent = '🌐';
+      el.appendChild(placeholder);
+    }
 
-    list.appendChild(el);
-  }
+    // 2. Create the tab info structure
+    const tabInfo = document.createElement('div');
+    tabInfo.className = 'tab-info';
 
-  // Attach restore handlers
-  list.querySelectorAll('.restore-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const tabId = parseInt(e.currentTarget.dataset.tabId);
-      btn.disabled = true;
+    const tabDomain = document.createElement('div');
+    tabDomain.className = 'tab-domain';
+    tabDomain.textContent = domain;
+    tabInfo.appendChild(tabDomain);
+
+    const tabTitle = document.createElement('div');
+    tabTitle.className = 'tab-title';
+    tabTitle.textContent = tab.title || '';
+    tabInfo.appendChild(tabTitle);
+
+    el.appendChild(tabInfo);
+
+    // 3. Create the restore button
+    const restoreBtn = document.createElement('button');
+    restoreBtn.className = 'restore-btn';
+    restoreBtn.title = 'Restore online';
+    restoreBtn.textContent = '↩';
+    restoreBtn.setAttribute('data-tab-id', tab.id);
+
+    // Attach event listener dynamically within the loop
+    restoreBtn.addEventListener('click', async () => {
+      restoreBtn.disabled = true;
       chrome.runtime.sendMessage({
         type: 'TOGGLE_OFFLINE',
-        tabId: tabId,
+        tabId: tab.id,
         makeOffline: false
       }, (response) => {
         if (response && response.success) {
           refreshManagedList();
         } else {
           showError('Failed to restore tab');
+          restoreBtn.disabled = false;
         }
       });
     });
-  });
+
+    el.appendChild(restoreBtn);
+
+    list.appendChild(el);
+  }
 }
 
 function refreshManagedList() {

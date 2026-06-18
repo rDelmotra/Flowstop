@@ -94,6 +94,12 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
 
 // ── Messages from popup ──
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  const extensionURL = chrome.runtime.getURL('');
+  if (!sender.url || !sender.url.startsWith(extensionURL)) {
+    sendResponse({ success: false, error: 'Unauthorized sender context.' });
+    return false;
+  }
+
   if (message.type === 'TOGGLE_OFFLINE') {
     toggleOffline(message.tabId, message.makeOffline)
       .then(() => sendResponse({ success: true }))
