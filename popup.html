@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-icon">🛑</div>
+    <h1>Flowstop</h1>
+    <span class="version">v0.2</span>
+  </div>
+
+  <!-- Current Tab Card -->
+  <div class="current-tab" id="currentTabCard">
+    <div class="current-tab-header">
+      <img class="tab-favicon" id="currentFavicon" src="" alt="">
+      <div class="tab-info">
+        <div class="tab-domain" id="currentDomain">Loading...</div>
+        <div class="tab-title" id="currentTitle"></div>
+      </div>
+      <span class="status-pill online" id="statusPill">Online</span>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">Disconnect this tab</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="offlineToggle">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Managed Tabs List -->
+  <div class="section-header">
+    <span class="section-title">Offline Tabs</span>
+    <span class="section-count zero" id="offlineCount">0</span>
+  </div>
+  <div class="managed-list" id="managedList">
+    <div class="managed-empty">No tabs offline</div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-dot"></div>
+    <span class="footer-text">Yellow bar on tab = offline mode active</span>
+  </div>
+
+  <!-- Error Toast -->
+  <div class="error-toast" id="errorToast"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
