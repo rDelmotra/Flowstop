@@ -76,7 +76,8 @@ async function renderManagedTabs(tabIds) {
 
   list.innerHTML = ''; // Clear list
 
-  for (const id of otherTabIds) {
+  for (let i = 0; i < otherTabIds.length; i++) {
+    const id = otherTabIds[i];
     let tab;
     try {
       tab = await chrome.tabs.get(id);
@@ -86,7 +87,7 @@ async function renderManagedTabs(tabIds) {
 
     const el = document.createElement('div');
     el.className = 'managed-tab';
-    el.style.animationDelay = `${otherTabIds.indexOf(id) * 30}ms`;
+    el.style.animationDelay = `${i * 30}ms`;
 
     const domain = getDomain(tab.url);
 
@@ -156,27 +157,9 @@ function refreshState() {
 
 // ── Toggle handler ──
 
-document.getElementById('offlineToggle').addEventListener('change', async (e) => {
+document.getElementById('offlineToggle').addEventListener('change', (e) => {
   const makeOffline = e.target.checked;
   e.target.disabled = true;
-
-  // Gate: ensure optional host permission is granted for cosmetic shim injection
-  if (makeOffline) {
-    const hasPerm = await chrome.permissions.contains({
-      origins: ['https://*/*', 'http://*/*']
-    });
-    if (!hasPerm) {
-      const granted = await chrome.permissions.request({
-        origins: ['https://*/*', 'http://*/*']
-      });
-      if (!granted) {
-        e.target.checked = false;
-        e.target.disabled = false;
-        showError('Permission needed to disconnect tabs');
-        return;
-      }
-    }
-  }
 
   chrome.runtime.sendMessage({
     type: 'TOGGLE_OFFLINE',
@@ -190,8 +173,14 @@ document.getElementById('offlineToggle').addEventListener('change', async (e) =>
       updateToggleState();
       refreshState();
     } else {
+      // Revert the toggle
       e.target.checked = !makeOffline;
-      showError(response ? response.error : 'Unknown error');
+      const errorMsg = response ? response.error : 'Unknown error';
+      if (errorMsg.includes('Cannot attach debugger')) {
+        showError('Close DevTools on that tab first');
+      } else {
+        showError(errorMsg);
+      }
     }
   });
 });

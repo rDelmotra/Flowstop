@@ -3,7 +3,7 @@
   "name": "Flowstop: Tab Blocker & Offline Mode",
   "short_name": "Flowstop",
   "version": "1.0",
-  "description": "True offline mode for specific browser tabs",
+  "description": "True offline mode for specific browser tabs — uses Chrome DevTools Protocol for airtight per-tab network isolation",
   "icons": {
     "16": "iconme.png",
     "32": "iconme.png",
@@ -11,14 +11,9 @@
     "128": "iconme.png"
   },
   "permissions": [
-    "declarativeNetRequest",
-    "scripting",
+    "debugger",
     "storage",
     "tabs"
-  ],
-  "optional_host_permissions": [
-    "https://*/*",
-    "http://*/*"
   ],
   "background": {
     "service_worker": "background.js"
