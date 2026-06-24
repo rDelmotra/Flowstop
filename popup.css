@@ -6,7 +6,6 @@
     radial-gradient(at 0% 0%, hsla(253, 100%, 88%, 0.7) 0px, transparent 50%),
     radial-gradient(at 100% 0%, hsla(189, 100%, 86%, 0.7) 0px, transparent 50%),
     radial-gradient(at 50% 100%, hsla(355, 100%, 88%, 0.7) 0px, transparent 50%);
-
   --card-bg: rgba(255, 255, 255, 0.45);
   --card-border: rgba(255, 255, 255, 0.6);
   --card-bg-hover: rgba(255, 255, 255, 0.6);
@@ -67,6 +66,12 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* ── 1. Entrance Animation ── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 body {
   width: 300px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -74,6 +79,7 @@ body {
   background-image: var(--bg-gradient);
   color: var(--text-primary);
   overflow-x: hidden;
+  animation: fadeIn 0.15s ease-out;
 }
 
 /* ── Header ── */
@@ -125,16 +131,22 @@ body {
   border: 1px solid var(--card-border);
   border-radius: 10px;
   padding: 10px;
-  transition: all 0.3s ease;
+  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 4px 16px 0 var(--shadow-color);
 }
 
+/* ── 2. Pulse Glow on Offline ── */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 4px 16px 0 rgba(239, 68, 68, 0.12); }
+  50% { box-shadow: 0 4px 20px 4px rgba(239, 68, 68, 0.25); }
+}
+
 .current-tab.offline {
   border-color: var(--toast-border);
   background: var(--red-glass);
-  box-shadow: 0 4px 16px 0 rgba(239, 68, 68, 0.15);
+  animation: pulseGlow 2.5s ease-in-out infinite;
 }
 
 .current-tab-header {
@@ -186,6 +198,7 @@ body {
   margin-top: 1px;
 }
 
+/* ── 8. Status Pill with Transition ── */
 .status-pill {
   font-size: 9px;
   font-weight: 700;
@@ -194,6 +207,7 @@ body {
   padding: 2px 7px;
   border-radius: 6px;
   flex-shrink: 0;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .status-pill.online {
@@ -223,7 +237,7 @@ body {
   color: var(--text-secondary);
 }
 
-/* Toggle Switch */
+/* ── Toggle Switch ── */
 .toggle-switch {
   position: relative;
   width: 40px;
@@ -258,6 +272,11 @@ body {
   border-radius: 50%;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* ── 3. Toggle Micro-interaction ── */
+.toggle-switch:active .toggle-track::after {
+  transform: scale(0.88);
 }
 
 .toggle-switch input:checked + .toggle-track {
@@ -331,6 +350,12 @@ body {
   -webkit-backdrop-filter: blur(16px);
 }
 
+/* ── 5. Staggered Tab Entrance ── */
+@keyframes slideInTab {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .managed-tab {
   display: flex;
   align-items: center;
@@ -340,10 +365,11 @@ body {
   border: 1px solid var(--card-border);
   border-radius: 10px;
   margin-bottom: 4px;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 2px 8px 0 var(--shadow-color);
+  animation: slideInTab 0.2s ease-out both;
 }
 
 .managed-tab:hover {
@@ -378,6 +404,7 @@ body {
   margin-top: 1px;
 }
 
+/* ── 6. Restore Button with Press Feedback ── */
 .restore-btn {
   background: var(--favicon-bg);
   border: 1px solid var(--toggle-border);
@@ -391,13 +418,18 @@ body {
   justify-content: center;
   font-size: 11px;
   flex-shrink: 0;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .restore-btn:hover {
   background: var(--green-glass);
   border-color: rgba(34, 197, 94, 0.3);
   color: var(--green-text);
+  transform: scale(1.1);
+}
+
+.restore-btn:active {
+  transform: scale(0.85);
 }
 
 /* ── Footer ── */
@@ -412,6 +444,12 @@ body {
   -webkit-backdrop-filter: blur(16px);
 }
 
+/* ── 4. Pulsing Footer Dot ── */
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
 .footer-dot {
   width: 6px;
   height: 6px;
@@ -419,6 +457,7 @@ body {
   background: #f59e0b;
   flex-shrink: 0;
   box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+  animation: pulse 2s ease-in-out infinite;
 }
 
 .footer-text {
@@ -426,6 +465,19 @@ body {
   font-weight: 500;
   color: var(--text-muted);
   line-height: 1.3;
+}
+
+.footer-shortcut {
+  margin-left: auto;
+  font-size: 8px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: rgba(100, 116, 139, 0.12);
+  padding: 1px 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0.7;
+  letter-spacing: 0.2px;
 }
 
 /* ── Error toast ── */

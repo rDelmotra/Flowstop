@@ -70,7 +70,7 @@ async function renderManagedTabs(tabIds) {
   count.className = totalOffline > 0 ? 'section-count' : 'section-count zero';
 
   if (otherTabIds.length === 0) {
-    list.innerHTML = '<div class="managed-empty">No other tabs offline</div>';
+    list.innerHTML = '<div class="managed-empty">✦ All tabs connected</div>';
     return;
   }
 
@@ -86,6 +86,7 @@ async function renderManagedTabs(tabIds) {
 
     const el = document.createElement('div');
     el.className = 'managed-tab';
+    el.style.animationDelay = `${otherTabIds.indexOf(id) * 30}ms`;
 
     const domain = getDomain(tab.url);
 
