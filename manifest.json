@@ -1,12 +1,24 @@
 {
   "manifest_version": 3,
-  "name": "Flowstop",
-  "version": "0.2",
+  "name": "Flowstop: Tab Blocker & Offline Mode",
+  "short_name": "Flowstop",
+  "version": "1.0",
   "description": "True offline mode for specific browser tabs",
+  "icons": {
+    "16": "iconme.png",
+    "32": "iconme.png",
+    "48": "iconme.png",
+    "128": "iconme.png"
+  },
   "permissions": [
-    "debugger",
+    "declarativeNetRequest",
+    "scripting",
     "storage",
     "tabs"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
   ],
   "background": {
     "service_worker": "background.js"

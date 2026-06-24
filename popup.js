@@ -58,32 +58,37 @@ function updateToggleState() {
 
 // ── Render managed tabs list ──
 
-function renderManagedTabs(tabs) {
+async function renderManagedTabs(tabIds) {
   const list = document.getElementById('managedList');
   const count = document.getElementById('offlineCount');
 
   // Filter out the current tab from the list (it's shown in the card above)
-  const otherTabs = tabs.filter(t => t.id !== currentTabId);
-  const totalOffline = tabs.length;
+  const otherTabIds = tabIds.filter(id => id !== currentTabId);
+  const totalOffline = tabIds.length;
 
   count.textContent = totalOffline;
   count.className = totalOffline > 0 ? 'section-count' : 'section-count zero';
 
-  if (otherTabs.length === 0) {
+  if (otherTabIds.length === 0) {
     list.innerHTML = '<div class="managed-empty">No other tabs offline</div>';
     return;
   }
 
-  // Clear the list container safely
-  list.innerHTML = '';
+  list.innerHTML = ''; // Clear list
 
-  for (const tab of otherTabs) {
+  for (const id of otherTabIds) {
+    let tab;
+    try {
+      tab = await chrome.tabs.get(id);
+    } catch (e) {
+      continue; // Tab might have been closed
+    }
+
     const el = document.createElement('div');
     el.className = 'managed-tab';
 
     const domain = getDomain(tab.url);
 
-    // 1. Safely render the favicon
     if (tab.favIconUrl) {
       const img = document.createElement('img');
       img.className = 'tab-favicon';
@@ -97,7 +102,6 @@ function renderManagedTabs(tabs) {
       el.appendChild(placeholder);
     }
 
-    // 2. Create the tab info structure
     const tabInfo = document.createElement('div');
     tabInfo.className = 'tab-info';
 
@@ -113,14 +117,11 @@ function renderManagedTabs(tabs) {
 
     el.appendChild(tabInfo);
 
-    // 3. Create the restore button
     const restoreBtn = document.createElement('button');
     restoreBtn.className = 'restore-btn';
     restoreBtn.title = 'Restore online';
     restoreBtn.textContent = '↩';
-    restoreBtn.setAttribute('data-tab-id', tab.id);
-
-    // Attach event listener dynamically within the loop
+    
     restoreBtn.addEventListener('click', async () => {
       restoreBtn.disabled = true;
       chrome.runtime.sendMessage({
@@ -129,7 +130,7 @@ function renderManagedTabs(tabs) {
         makeOffline: false
       }, (response) => {
         if (response && response.success) {
-          refreshManagedList();
+          refreshState();
         } else {
           showError('Failed to restore tab');
           restoreBtn.disabled = false;
@@ -138,14 +139,15 @@ function renderManagedTabs(tabs) {
     });
 
     el.appendChild(restoreBtn);
-
     list.appendChild(el);
   }
 }
 
-function refreshManagedList() {
-  chrome.runtime.sendMessage({ type: 'GET_ALL_OFFLINE' }, (response) => {
+function refreshState() {
+  chrome.runtime.sendMessage({ type: 'GET_OFFLINE_TABS' }, (response) => {
     if (response && response.tabs) {
+      isOffline = response.tabs.includes(currentTabId);
+      updateToggleState();
       renderManagedTabs(response.tabs);
     }
   });
@@ -153,9 +155,27 @@ function refreshManagedList() {
 
 // ── Toggle handler ──
 
-document.getElementById('offlineToggle').addEventListener('change', (e) => {
+document.getElementById('offlineToggle').addEventListener('change', async (e) => {
   const makeOffline = e.target.checked;
   e.target.disabled = true;
+
+  // Gate: ensure optional host permission is granted for cosmetic shim injection
+  if (makeOffline) {
+    const hasPerm = await chrome.permissions.contains({
+      origins: ['https://*/*', 'http://*/*']
+    });
+    if (!hasPerm) {
+      const granted = await chrome.permissions.request({
+        origins: ['https://*/*', 'http://*/*']
+      });
+      if (!granted) {
+        e.target.checked = false;
+        e.target.disabled = false;
+        showError('Permission needed to disconnect tabs');
+        return;
+      }
+    }
+  }
 
   chrome.runtime.sendMessage({
     type: 'TOGGLE_OFFLINE',
@@ -167,16 +187,10 @@ document.getElementById('offlineToggle').addEventListener('change', (e) => {
     if (response && response.success) {
       isOffline = makeOffline;
       updateToggleState();
-      refreshManagedList();
+      refreshState();
     } else {
-      // Revert the toggle
       e.target.checked = !makeOffline;
-      const errorMsg = response ? response.error : 'Unknown error';
-      if (errorMsg.includes('Cannot attach debugger')) {
-        showError('Close DevTools on that tab first');
-      } else {
-        showError(errorMsg);
-      }
+      showError(response ? response.error : 'Unknown error');
     }
   });
 });
@@ -188,13 +202,7 @@ async function init() {
   currentTabId = tab.id;
 
   renderCurrentTab(tab);
-
-  chrome.runtime.sendMessage({ type: 'GET_STATUS', tabId: currentTabId }, (response) => {
-    isOffline = response.isOffline;
-    updateToggleState();
-  });
-
-  refreshManagedList();
+  refreshState();
 }
 
 init();
